@@ -1,0 +1,1 @@
+export const fileBaseUrl = 'http://159.75.169.224:1235'//文件基础地址，用来拼接
