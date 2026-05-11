@@ -5,7 +5,11 @@
             "destination": "http://159.75.169.224:1235/api/:match*"
         },
         {
-            "source": "/((?!api/).*)",
+            "source": "/files/:match*",
+            "destination": "http://159.75.169.224:1235/files/:match*"
+        },
+        {
+            "source": "/((?!api/|files/).*)",
             "destination": "/index.html"
         }
     ],

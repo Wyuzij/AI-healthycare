@@ -1,1 +1,1 @@
-export const fileBaseUrl = 'http://159.75.169.224:1235'//文件基础地址，用来拼接
+export const fileBaseUrl = '' // 图片通过 Vercel/vite 代理，无需完整 URL

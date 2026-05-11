@@ -75,7 +75,7 @@ const getPageList = () => {
   })
 }
 
-const getImage = (url) => url ? 'http://159.75.169.224:1235' + url : null
+const getImage = (url) => url || null
 
 const handleChange = (page) => {
   pagination.value.currentPage = page
@@ -88,7 +88,7 @@ onMounted(() => {
   getPageList()
   getKnowledgeList({ sortField: 'readCount', sortDirection: 'desc', currentPage: 1, size: 5 }).then(res => {
     recommendList.value = res.records
-  })
+  }).catch(() => {})
 })
 </script>
 
