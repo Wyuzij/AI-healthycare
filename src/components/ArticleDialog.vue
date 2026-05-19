@@ -76,16 +76,22 @@ const dialogVisible = computed({
 const isEdit = computed(() => !!props.article?.id)
 
 watch(() => props.article, (newVal) => {
-  if (newVal) {
+  if (newVal && newVal.id) {
     nextTick(() => {
       Object.assign(formData, newVal)
+      formData.tagArray = newVal.tags ? newVal.tags.split(',').filter(Boolean) : []
       businessId.value = newVal.id
       imgUrl.value = newVal.coverImage || ''
     })
+  } else {
+    // 新建时重置
+    formData.title = ''; formData.content = ''; formData.coverImage = ''; formData.summary = ''; formData.tags = ''; formData.tagArray = []; formData.id = ''
+    businessId.value = null
+    imgUrl.value = ''
   }
 })
 
-const formData = reactive({ title: '', content: '', coverImage: '', categoryId: 1, summary: '', tags: '', id: '' })
+const formData = reactive({ title: '', content: '', coverImage: '', categoryId: 1, summary: '', tags: '', id: '', tagArray: [] })
 const commonTags = ['情绪管理', '焦虑', '抑郁', '压力', '睡眠', '冥想', '正念', '放松', '心理健康', '自我成长', '人际关系', '工作压力', '学习方法', '生活技巧']
 
 const rules = reactive({
