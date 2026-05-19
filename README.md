@@ -1,162 +1,172 @@
-# 🧠 心理 AI 助手 - 管理后台
+# 心灵AI助手
 
-一个基于 Vue 3 + Element Plus 的心理健康 AI 助手管理平台，提供数据分析、知识文章管理、咨询记录、情绪日志等功能。
+Vue 3 + Express + SQLite 全栈心理辅导平台，集成 GLM-4 Flash AI 对话。
 
-## ✨ 特性
+## 技术栈
 
-- 🚀 **现代化技术栈**：Vue 3 + Vite + Element Plus
-- 📊 **数据可视化**：ECharts 图表展示情绪趋势、用户活跃度等数据
-- 💬 **AI 心理咨询**：集成 AI 对话功能，提供在线心理咨询服务
-- 📝 **知识文章管理**：心理健康知识的创建、编辑、分类管理
-- 📅 **咨询记录**：用户咨询会话的管理和查看
-- 🎭 **情绪日志**：用户情绪记录的查看和分析
-- 🔐 **权限管理**：完善的登录认证和权限控制
-- 🎨 **响应式设计**：适配不同屏幕尺寸
+| 层 | 技术 |
+|---|---|
+| 前端 | Vue 3 + Vite + Element Plus + ECharts + Pinia |
+| 后端 | Express + better-sqlite3 + JWT + SSE |
+| AI | 智谱 GLM-4 Flash（OpenAI 兼容接口） |
+| 部署 | 阿里云 ECS + 宝塔面板 + Nginx + PM2 |
 
-## 🛠️ 技术栈
-
-- **前端框架**：Vue 3.5.30
-- **构建工具**：Vite 8.0.0
-- **UI 组件库**：Element Plus 2.13.5
-- **状态管理**：Pinia 3.0.4
-- **路由管理**：Vue Router 4.6.4
-- **HTTP 请求**：Axios 1.13.6
-- **图表库**：ECharts 6.0.0
-- **富文本编辑器**：WangEditor 5.1.23
-- **CSS 预处理器**：Sass + Less
-- **流式请求**：@microsoft/fetch-event-source
-
-## 📦 项目结构
+## 项目结构
 
 ```
 ai-vue/
-├── src/
-│   ├── api/              # API 接口定义
-│   │   ├── admin.js      # 后台管理接口
-│   │   └── frontend.js   # 前端用户接口
-│   ├── assets/           # 静态资源
-│   │   └── images/       # 图片资源
-│   ├── components/       # 公共组件
-│   │   ├── Sidebar.vue   # 侧边栏
-│   │   ├── Navbar.vue    # 导航栏
-│   │   ├── ArticleDialog.vue  # 文章弹窗
-│   │   └── ...
-│   ├── router/           # 路由配置
-│   ├── stores/           # Pinia 状态管理
-│   ├── utils/            # 工具函数
-│   │   └── request.js    # HTTP 请求封装
-│   ├── views/            # 页面组件
-│   │   ├── dashboard.vue        # 数据分析
-│   │   ├── knowledge.vue        # 知识文章
-│   │   ├── consultations.vue    # 咨询记录
-│   │   ├── emotional.vue        # 情绪日志
-│   │   ├── conultation.vue      # AI 咨询对话
-│   │   ├── login.vue            # 登录
-│   │   └── ...
-│   ├── App.vue         # 根组件
-│   └── main.js         # 入口文件
-├── public/             # 公共资源
-├── package.json        # 项目配置
-├── vite.config.js      # Vite 配置
-└── README.md          # 项目说明
+├── src/                    # 前端 Vue 源码
+│   ├── api/                # API 接口（admin / frontend）
+│   ├── components/         # 公共组件
+│   ├── router/             # 路由 + 权限守卫
+│   ├── untils/             # axios 封装、请求拦截
+│   └── views/              # 页面（仪表盘/知识库/咨询/情绪日记/登录）
+├── server/                 # 后端 Express 源码
+│   ├── routes/             # 路由（user/chat/emotion/knowledge/upload/analytics）
+│   ├── middleware/         # JWT 鉴权中间件
+│   ├── db.js               # SQLite 建表 + 迁移
+│   ├── seed.js             # Mock 数据填充
+│   ├── swagger.js          # OpenAPI 3.0 文档
+│   └── index.js            # 入口（生产环境 serve 前端 dist）
+├── dist/                   # 前端构建产物（生产用）
+└── vite.config.js          # Vite 配置（dev proxy）
 ```
 
-## 🚀 快速开始
+## 后端实现
 
-### 安装依赖
+Express + better-sqlite3 本地数据库，JWT 鉴权，SSE 流式 AI 对话。
+
+**数据库 6 张表：** user / chat_session / chat_message / emotion_diary / knowledge_category / knowledge_article
+
+**20 个接口：**
+
+| 模块 | 方法 | 路径 | 说明 |
+|---|---|---|---|
+| 用户 | POST | /api/user/login | 登录，bcrypt 验密，签发 7 天 JWT |
+| | POST | /api/user/add | 注册 |
+| | POST | /api/user/logout | 登出 |
+| AI 对话 | POST | /api/psychological-chat/session/start | 创建会话 |
+| | POST | /api/psychological-chat/stream | SSE 流式回复（GLM-4 Flash） |
+| | GET | /api/psychological-chat/sessions | 会话列表（分页） |
+| | GET | /api/psychological-chat/sessions/:id/messages | 历史消息 |
+| | GET | /api/psychological-chat/session/:id/emotion | AI 情绪分析 |
+| | DELETE | /api/psychological-chat/sessions/:id | 删除会话 |
+| 情绪日记 | POST | /api/emotion-diary | 添加日记 |
+| | GET | /api/emotion-diary/admin/page | 管理端分页 |
+| | DELETE | /api/emotion-diary/admin/:id | 删除 |
+| 知识库 | GET | /api/knowledge/category/tree | 分类列表（扁平） |
+| | GET | /api/knowledge/article/page | 文章分页 |
+| | GET | /api/knowledge/article/:id | 文章详情 |
+| | POST | /api/knowledge/article | 创建文章 |
+| | PUT | /api/knowledge/article/:id | 更新文章 |
+| | PUT | /api/knowledge/article/:id/status | 状态变更 |
+| | DELETE | /api/knowledge/article/:id | 删除文章 |
+| 其他 | POST | /api/file/upload | 图片上传（multer） |
+| | GET | /api/data-analytics/overview | 仪表盘统计 + 7 天趋势 |
+| | GET | /api-docs | Swagger UI |
+
+**响应格式：** `{ code, msg, data, message, success }`
+**分页格式：** `{ records, total, size, current, pages }`
+**鉴权：** 请求头 `token`（JWT payload：`{ userId, username, roleType }`）
+
+## 快速开始
+
+### 前端 dev
+
 ```bash
 npm install
+npm run dev        # http://localhost:5173
 ```
 
-### 启动开发服务器
+### 后端 dev
+
 ```bash
-npm run dev
+cd server
+cp .env.example .env    # 编辑 .env 填入 GLM_API_KEY
+npm install
+node seed.js             # 初始化数据
+npm run dev              # http://localhost:3000
 ```
 
-### 构建生产版本
-```bash
-npm run build
+### .env 配置
+
+```
+PORT=3000
+JWT_SECRET=随便一串随机字符
+GLM_API_KEY=你的智谱API密钥
+GLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+GLM_MODEL=glm-4-flash
 ```
 
-### 预览生产构建
-```bash
-npm run preview
-```
+### 测试账号
 
-## 📱 功能模块
+| 角色 | 用户名 | 密码 |
+|---|---|---|
+| 管理员 | admin | admin123 |
+| 普通用户 | zhangsan | 123456 |
 
-### 1. 数据分析 (Dashboard)
-- 系统概览统计
-- 情绪趋势分析图表
-- 咨询会话统计
-- 用户活跃度趋势
+## 跨域处理
 
-### 2. 知识文章管理
-- 文章列表展示
-- 文章创建/编辑/删除
-- 文章分类管理
-- 富文本编辑器支持
+生产环境前后端同域名同端口，Nginx 按路径分发——`/` 走前端静态文件，`/api/*` 反向代理到 Express。浏览器始终只看到一个源，无跨域问题。
 
-### 3. 咨询记录
-- 用户咨询会话列表
-- 会话详情查看
-- 会话删除管理
-
-### 4. 情绪日志
-- 用户情绪记录列表
-- 情绪数据分析
-- 情绪趋势图表
-
-### 5. AI 心理咨询
-- 实时 AI 对话
-- 流式响应展示
-- 会话历史管理
-- 情绪分析集成
-
-## 🔧 环境配置
-
-项目使用环境变量配置，后端 API 地址通过 Vite 代理配置：
+开发环境 Vite proxy 同理：
 
 ```javascript
 // vite.config.js
 server: {
   proxy: {
-    '/api': {
-      target: 'http://159.75.169.224:1235',
-      changeOrigin: true
-    }
+    '/api': { target: 'http://localhost:3000', changeOrigin: true }
   }
 }
 ```
 
-## 🌐 部署
+## 部署（阿里云 ECS + 宝塔面板）
 
-### 部署到 Vercel
+**环境：** CentOS / Alibaba Cloud Linux + Node 22
+
 ```bash
-npm install -g vercel
-vercel login
-vercel --prod
+# 1. 安装 Node 22
+curl -fsSL https://rpm.nodesource.com/setup_22.x | sudo bash -
+sudo dnf install -y nodejs
+
+# 2. 编译工具
+sudo dnf groupinstall -y "Development Tools"
+sudo dnf install -y python38
+
+# 3. 拉代码
+cd /www/wwwroot
+git clone https://github.com/Wyuzij/AI-healthycare.git
+cd AI-healthycare/server
+
+# 4. 创建 .env 并填入实际值
+cat > .env << 'EOF'
+PORT=3000
+JWT_SECRET=实际随机字符串
+GLM_API_KEY=实际key
+GLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+GLM_MODEL=glm-4-flash
+EOF
+
+# 5. 安装 + 初始化
+npm install
+node seed.js
+
+# 6. PM2 守护
+npm install -g pm2
+NODE_ENV=production pm2 start index.js --name ai-healthycare
+pm2 startup
+pm2 save
 ```
 
-### 部署到 Netlify
-```bash
-npm install -g netlify-cli
-netlify login
-netlify deploy --prod --dir=dist
-```
+**宝塔面板：**
+- 网站 → 添加站点（填域名或 IP） → 反向代理目标 `http://127.0.0.1:3000`
+- SSL → 申请免费证书
 
-## 📄 许可证
+**更新前端：** 本地 `npm run build`，上传 `dist/` 覆盖 `/www/wwwroot/dist/`。
+**更新后端：** 拉代码后 `pm2 restart ai-healthycare`。
 
-MIT License
+**数据备份：** 下载 `/www/wwwroot/server/data.db` 即可，SQLite 单文件。
 
-## 👨‍💻 开发者
+## Swagger 文档
 
-- GitHub: [@odn775](https://github.com/odn775/ai-vue)
-
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
----
-
-**注意**：这是一个心理健康 AI 助手的管理后台系统，需要配合后端 API 服务使用。
+开发环境访问 `http://localhost:3000/api-docs`，生产环境 `https://你的域名/api-docs`。
