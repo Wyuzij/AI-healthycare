@@ -16,13 +16,13 @@
           <el-input v-model="formData.username" placeholder="请输入用户名" size="large" />
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
-          <el-input v-model="formData.email" placeholder="请输入邮箱" size="large" />
+          <el-input v-model="formData.email" type="email" placeholder="请输入邮箱，如 name@example.com" size="large" />
         </el-form-item>
         <el-form-item label="昵称" prop="nickname">
           <el-input v-model="formData.nickname" placeholder="请输入昵称（可选）" size="large" />
         </el-form-item>
         <el-form-item label="手机号" prop="phone">
-          <el-input v-model="formData.phone" placeholder="请输入手机号" size="large" />
+          <el-input v-model="formData.phone" type="tel" maxlength="11" placeholder="请输入11位手机号" size="large" />
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input v-model="formData.password" type="password" placeholder="请输入密码" show-password size="large" />
@@ -57,27 +57,60 @@ const formData = reactive({
   password: '', confirmPassword: '', gender: 0, userType: 1
 })
 
+const PHONE_RE = /^1[3-9]\d{9}$/
+
+const validatePhone = (_rule, value, callback) => {
+  if (!value) {
+    callback(new Error('请输入手机号'))
+    return
+  }
+  if (!PHONE_RE.test(String(value).trim())) {
+    callback(new Error('请输入正确的11位手机号'))
+    return
+  }
+  callback()
+}
+
+const validateConfirmPassword = (_rule, value, callback) => {
+  if (!value) {
+    callback(new Error('请确认密码'))
+    return
+  }
+  if (value !== formData.password) {
+    callback(new Error('两次输入的密码不一致'))
+    return
+  }
+  callback()
+}
+
 const rules = reactive({
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: ['blur', 'change'] },
+  ],
+  phone: [{ validator: validatePhone, trigger: ['blur', 'change'] }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-  confirmPassword: [{ required: true, message: '请确认密码', trigger: 'blur' }],
+  confirmPassword: [{ validator: validateConfirmPassword, trigger: 'blur' }],
 })
 
 const submitForm = async (formEl) => {
   if (!formEl) return
-  formEl.validate(async () => {
-    loading.value = true
-    register(formData).then(({ data }) => {
-      loading.value = false
-      if (!data) {
-        ElMessage.success('注册成功')
-        router.push('/auth/login')
-      } else if (data.code === 'BUSINESS_ERROR') {
-        ElMessage.error(data.message)
-      }
-    }).catch(() => { loading.value = false })
-  })
+  try {
+    await formEl.validate()
+  } catch {
+    return
+  }
+  loading.value = true
+  register(formData).then(({ data }) => {
+    loading.value = false
+    if (!data) {
+      ElMessage.success('注册成功')
+      router.push('/auth/login')
+    } else if (data.code === 'BUSINESS_ERROR') {
+      ElMessage.error(data.message)
+    }
+  }).catch(() => { loading.value = false })
 }
 </script>
 
